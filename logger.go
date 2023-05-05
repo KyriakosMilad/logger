@@ -10,9 +10,9 @@ import (
 )
 
 var (
-	ConsolePrint             = false
-	OutputLogFile            = ""
-	CreateLogFileIfNotExists = true
+	ConsolePrint            = false
+	OutputLogFile           = ""
+	CreateLogFileIfNotExist = true
 )
 
 const (
@@ -58,7 +58,7 @@ func Log(s string, level string, skip int) {
 
 func writeToFile(l string, file string) {
 	var f *os.File
-	if CreateLogFileIfNotExists {
+	if CreateLogFileIfNotExist {
 		err := os.MkdirAll(filepath.Dir(file), os.ModePerm)
 		if err != nil {
 			panic(fmt.Sprintf("error creating log file path %s: %s", file, err))
