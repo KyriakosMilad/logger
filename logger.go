@@ -10,59 +10,69 @@ import (
 	"time"
 )
 
-var (
-	ConsolePrint            = false
-	OutputLogFile           = ""
-	CreateLogFileIfNotExist = true
-	TraceCode               = ""
-	Counter                 = 0
-)
-
 const (
 	LogErrorLevel   = "ERROR"
 	LogInfoLevel    = "INFO"
 	LogWarningLevel = "WARNING"
 )
 
-func LogError(s string) {
-	Log(s, LogErrorLevel, 1)
+type Logger struct {
+	consolePrint            bool
+	outputLogFile           string
+	createLogFileIfNotExist bool
+	traceCode               string
+	counter                 int
 }
 
-func LogInfo(s string) {
-	Log(s, LogInfoLevel, 1)
+func New(consolePrint bool, outputLogFile string, createLogFileIfNotExist bool, traceCode string) *Logger {
+	return &Logger{
+		consolePrint:            consolePrint,
+		outputLogFile:           outputLogFile,
+		createLogFileIfNotExist: createLogFileIfNotExist,
+		traceCode:               traceCode,
+		counter:                 0,
+	}
 }
 
-func LogWarning(s string) {
-	Log(s, LogWarningLevel, 1)
+func (lgr *Logger) LogError(s string) {
+	lgr.Log(s, LogErrorLevel, 1)
 }
 
-func LogInnerError(s string, skip int) {
-	Log(s, LogErrorLevel, skip+1)
+func (lgr *Logger) LogInfo(s string) {
+	lgr.Log(s, LogInfoLevel, 1)
 }
 
-func LogInnerInfo(s string, skip int) {
-	Log(s, LogInfoLevel, skip+1)
+func (lgr *Logger) LogWarning(s string) {
+	lgr.Log(s, LogWarningLevel, 1)
 }
 
-func LogInnerWarning(s string, skip int) {
-	Log(s, LogWarningLevel, skip+1)
+func (lgr *Logger) LogInnerError(s string, skip int) {
+	lgr.Log(s, LogErrorLevel, skip+1)
 }
 
-func Log(s string, level string, skip int) {
+func (lgr *Logger) LogInnerInfo(s string, skip int) {
+	lgr.Log(s, LogInfoLevel, skip+1)
+}
+
+func (lgr *Logger) LogInnerWarning(s string, skip int) {
+	lgr.Log(s, LogWarningLevel, skip+1)
+}
+
+func (lgr *Logger) Log(s string, level string, skip int) {
 	pc, filename, line, _ := runtime.Caller(skip + 1)
 	now := time.Now().UTC().Format(time.RFC3339)
-	l := fmt.Sprintf("%s %s %04d %s %s[%s:%d] %v\n", now, TraceCode, Counter, level, runtime.FuncForPC(pc).Name(), filename, line, s)
-	if ConsolePrint {
+	l := fmt.Sprintf("%s %s %04d %s %s[%s:%d] %v\n", now, lgr.traceCode, lgr.counter, level, runtime.FuncForPC(pc).Name(), filename, line, s)
+	if lgr.consolePrint {
 		log.Printf(l)
 	}
-	if OutputLogFile != "" {
-		writeToFile(l, OutputLogFile)
+	if lgr.outputLogFile != "" {
+		lgr.writeToFile(l, lgr.outputLogFile)
 	}
 }
 
-func writeToFile(l string, file string) {
+func (lgr *Logger) writeToFile(l string, file string) {
 	var f *os.File
-	if CreateLogFileIfNotExist {
+	if lgr.createLogFileIfNotExist {
 		err := os.MkdirAll(filepath.Dir(file), os.ModePerm)
 		if err != nil {
 			panic(fmt.Sprintf("error creating log file path %s: %s", file, err))
@@ -99,6 +109,6 @@ func writeToFile(l string, file string) {
 	}
 }
 
-func ResetCounter() {
-	Counter = 0
+func (lgr *Logger) ResetCounter() {
+	lgr.counter = 0
 }
