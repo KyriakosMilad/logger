@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"time"
 )
 
 var (
@@ -47,7 +48,8 @@ func LogInnerWarning(s string, skip int) {
 
 func Log(s string, level string, skip int) {
 	pc, filename, line, _ := runtime.Caller(skip + 1)
-	l := fmt.Sprintf("[%s] %s[%s:%d] %v\n", level, runtime.FuncForPC(pc).Name(), filename, line, s)
+	now := time.Now().UTC().Format(time.RFC3339)
+	l := fmt.Sprintf("%s %s %s[%s:%d] %v\n", now, level, runtime.FuncForPC(pc).Name(), filename, line, s)
 	if ConsolePrint {
 		log.Printf(l)
 	}
