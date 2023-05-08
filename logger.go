@@ -15,6 +15,7 @@ var (
 	OutputLogFile           = ""
 	CreateLogFileIfNotExist = true
 	TraceCode               = ""
+	Counter                 = 0
 )
 
 const (
@@ -50,7 +51,7 @@ func LogInnerWarning(s string, skip int) {
 func Log(s string, level string, skip int) {
 	pc, filename, line, _ := runtime.Caller(skip + 1)
 	now := time.Now().UTC().Format(time.RFC3339)
-	l := fmt.Sprintf("%s %s %s %s[%s:%d] %v\n", now, TraceCode, level, runtime.FuncForPC(pc).Name(), filename, line, s)
+	l := fmt.Sprintf("%s %s %04d %s %s[%s:%d] %v\n", now, TraceCode, Counter, level, runtime.FuncForPC(pc).Name(), filename, line, s)
 	if ConsolePrint {
 		log.Printf(l)
 	}
@@ -96,4 +97,8 @@ func writeToFile(l string, file string) {
 	if err != nil {
 		panic(fmt.Sprintf("error flushing log file %s: %s", file, err))
 	}
+}
+
+func ResetCounter() {
+	Counter = 0
 }
