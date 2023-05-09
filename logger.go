@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 	"time"
 )
 
@@ -16,21 +17,25 @@ const (
 	LogWarningLevel = "WARNING"
 )
 
+const DefaultFormat = "$now $traceCode $counter $level $funcName[$fileName:$lineNumber] $value"
+
 type Logger struct {
 	consolePrint            bool
 	outputLogFile           string
 	createLogFileIfNotExist bool
 	traceCode               string
 	counter                 int
+	format                  string
 }
 
-func New(consolePrint bool, outputLogFile string, createLogFileIfNotExist bool, traceCode string) *Logger {
+func New(consolePrint bool, outputLogFile string, createLogFileIfNotExist bool, traceCode string, format string) *Logger {
 	return &Logger{
 		consolePrint:            consolePrint,
 		outputLogFile:           outputLogFile,
 		createLogFileIfNotExist: createLogFileIfNotExist,
 		traceCode:               traceCode,
 		counter:                 0,
+		format:                  format,
 	}
 }
 
@@ -60,10 +65,19 @@ func (lgr *Logger) LogInnerWarning(s string, skip int) {
 
 func (lgr *Logger) Log(s string, level string, skip int) {
 	pc, filename, line, _ := runtime.Caller(skip + 1)
-	now := time.Now().UTC().Format(time.RFC3339)
-	l := fmt.Sprintf("%s %s %04d %s %s[%s:%d] %v\n", now, lgr.traceCode, lgr.counter, level, runtime.FuncForPC(pc).Name(), filename, line, s)
+	vars := map[string]string{
+		"now":        time.Now().UTC().Format(time.RFC3339),
+		"traceCode":  lgr.traceCode,
+		"counter":    fmt.Sprintf("%04d", lgr.counter),
+		"level":      level,
+		"funcName":   runtime.FuncForPC(pc).Name(),
+		"fileName":   filename,
+		"lineNumber": string(rune(line)),
+		"value":      s,
+	}
+	l := lgr.replaceVariables(lgr.format, vars) + "\n"
 	if lgr.consolePrint {
-		log.Printf(l)
+		log.Print(l)
 	}
 	if lgr.outputLogFile != "" {
 		lgr.writeToFile(l, lgr.outputLogFile)
@@ -111,4 +125,38 @@ func (lgr *Logger) writeToFile(l string, file string) {
 
 func (lgr *Logger) ResetCounter() {
 	lgr.counter = 0
+}
+
+func (lgr *Logger) replaceVariables(str string, variables map[string]string) string {
+	var builder strings.Builder
+	start := 0
+
+	for {
+		placeholderStart := strings.IndexByte(str[start:], '$')
+		if placeholderStart == -1 {
+			builder.WriteString(str[start:])
+			break
+		}
+
+		builder.WriteString(str[start : start+placeholderStart])
+
+		placeholderEnd := strings.IndexByte(str[start+placeholderStart:], ' ')
+		if placeholderEnd == -1 {
+			placeholderEnd = len(str)
+		} else {
+			placeholderEnd += start + placeholderStart
+		}
+
+		placeholder := str[start+placeholderStart : placeholderEnd]
+
+		if replacement, exists := variables[placeholder]; exists {
+			builder.WriteString(replacement)
+		} else {
+			builder.WriteString(placeholder)
+		}
+
+		start = placeholderEnd
+	}
+
+	return builder.String()
 }
