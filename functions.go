@@ -16,6 +16,7 @@ var (
 	CreateLogFileIfNotExist = true
 	TraceCode               = ""
 	Counter                 = 0
+	Format                  = ""
 )
 
 func LogError(s string) {
