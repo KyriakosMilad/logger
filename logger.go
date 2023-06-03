@@ -12,12 +12,11 @@ import (
 )
 
 const (
+	DefaultFormat   = "$now $traceCode $counter $level $funcName[$fileName:$lineNumber] $value"
 	LogErrorLevel   = "ERROR"
 	LogInfoLevel    = "INFO"
 	LogWarningLevel = "WARNING"
 )
-
-const DefaultFormat = "$now $traceCode $counter $level $funcName[$fileName:$lineNumber] $value"
 
 type Logger struct {
 	consolePrint            bool
