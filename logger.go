@@ -162,7 +162,13 @@ func (lgr *Logger) replaceVariables(str string, variables map[string]string) str
 }
 
 func autoGenerateTraceCode(prefix string) string {
-	min := 100000 // minimum 6-digit number
-	max := 999999 // maximum 6-digit number
-	return prefix + "." + fmt.Sprint(rand.Intn(max-min+1)+min)
+	const digits = "abcdefghijklmnopqrstuvwxyz0123456789"
+	rand.Seed(time.Now().UnixNano())
+
+	code := make([]byte, 6)
+	for i := range code {
+		code[i] = digits[rand.Intn(len(digits))]
+	}
+
+	return prefix + "." + string(code)
 }
