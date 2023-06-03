@@ -161,7 +161,7 @@ func (lgr *Logger) replaceVariables(str string, variables map[string]string) str
 	return builder.String()
 }
 
-func autoGenerateTraceCode(prefix string) string {
+func AutoGenerateTraceCode(prefix string) string {
 	const digits = "abcdefghijklmnopqrstuvwxyz0123456789"
 	rand.Seed(time.Now().UnixNano())
 
