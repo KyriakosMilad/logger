@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"log"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -158,4 +159,10 @@ func (lgr *Logger) replaceVariables(str string, variables map[string]string) str
 	}
 
 	return builder.String()
+}
+
+func autoGenerateTraceCode(prefix string) string {
+	min := 100000 // minimum 6-digit number
+	max := 999999 // maximum 6-digit number
+	return prefix + "." + fmt.Sprint(rand.Intn(max-min+1)+min)
 }
