@@ -170,5 +170,8 @@ func AutoGenerateTraceCode(prefix string) string {
 		code[i] = digits[rand.Intn(len(digits))]
 	}
 
-	return prefix + "." + string(code)
+	if prefix != "" {
+		return prefix + "." + string(code)
+	}
+	return string(code)
 }
