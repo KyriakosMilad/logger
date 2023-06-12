@@ -163,7 +163,6 @@ func (lgr *Logger) replaceVariables(str string, variables map[string]string) str
 
 func AutoGenerateTraceCode(prefix string, length uint8) string {
 	const digits = "abcdefghijklmnopqrstuvwxyz0123456789"
-	rand.Seed(time.Now().UnixNano())
 
 	code := make([]byte, length)
 	for i := range code {
