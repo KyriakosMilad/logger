@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	DefaultFormat   = "$now $traceCode $counter $level $funcName[$fileName:$lineNumber] $value"
+	DefaultFormat   = "${now} ${traceCode} ${counter} ${level} ${funcName}[${fileName}:${lineNumber}] ${value}"
 	LogErrorLevel   = "ERROR"
 	LogInfoLevel    = "INFO"
 	LogWarningLevel = "WARNING"
@@ -28,10 +28,14 @@ type Logger struct {
 	format                  string
 }
 
-func New(consolePrint bool, outputLogFile string, createLogFileIfNotExist bool, traceCode string, format string) *Logger {
+func New(consolePrint bool, outputLogsDir string, createLogFileIfNotExist bool, traceCode string, format string) *Logger {
+	if outputLogsDir[len(outputLogsDir)-1] != '/' {
+		outputLogsDir += "/"
+	}
+	logsDir := outputLogsDir + time.Now().UTC().Format("20060102") + ".log"
 	return &Logger{
 		consolePrint:            consolePrint,
-		outputLogFile:           outputLogFile,
+		outputLogFile:           logsDir,
 		createLogFileIfNotExist: createLogFileIfNotExist,
 		traceCode:               traceCode,
 		counter:                 0,
@@ -99,7 +103,7 @@ func (lgr *Logger) writeToFile(l string, file string) {
 		var err error
 		f, err = os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0644)
 		if err != nil {
-			panic(err)
+			return
 		}
 	}
 
@@ -127,38 +131,36 @@ func (lgr *Logger) ResetCounter() {
 	lgr.counter = 0
 }
 
-func (lgr *Logger) replaceVariables(str string, variables map[string]string) string {
-	var builder strings.Builder
-	start := 0
+func (lgr *Logger) replaceVariables(input string, variables map[string]string) string {
+	var output strings.Builder
+	variableStart := -1
+	insideVariable := false
 
-	for {
-		placeholderStart := strings.IndexByte(str[start:], '$')
-		if placeholderStart == -1 {
-			builder.WriteString(str[start:])
-			break
-		}
+	for i := 0; i < len(input); i++ {
+		char := input[i]
 
-		builder.WriteString(str[start : start+placeholderStart])
-
-		placeholderEnd := strings.IndexByte(str[start+placeholderStart:], ' ')
-		if placeholderEnd == -1 {
-			placeholderEnd = len(str)
+		if insideVariable {
+			if char == '}' {
+				insideVariable = false
+				variableName := input[variableStart+2 : i]
+				if value, ok := variables[variableName]; ok {
+					output.WriteString(value)
+				} else {
+					output.WriteString("${" + variableName + "}")
+				}
+			}
 		} else {
-			placeholderEnd += start + placeholderStart
+			if char == '$' && i+1 < len(input) && input[i+1] == '{' {
+				insideVariable = true
+				variableStart = i
+				i++ // Skip '{' character
+			} else {
+				output.WriteByte(char)
+			}
 		}
-
-		placeholder := str[start+placeholderStart : placeholderEnd]
-
-		if replacement, exists := variables[placeholder]; exists {
-			builder.WriteString(replacement)
-		} else {
-			builder.WriteString(placeholder)
-		}
-
-		start = placeholderEnd
 	}
 
-	return builder.String()
+	return output.String()
 }
 
 func AutoGenerateTraceCode(prefix string, length uint8) string {
