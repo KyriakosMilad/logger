@@ -6,7 +6,6 @@ import (
 	"log"
 	"math/rand"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 	"time"
@@ -89,22 +88,14 @@ func (lgr *Logger) Log(s string, level string, skip int) {
 }
 
 func (lgr *Logger) writeToFile(l string, file string) {
-	var f *os.File
+	flag := os.O_APPEND | os.O_WRONLY
 	if lgr.createLogFileIfNotExist {
-		err := os.MkdirAll(filepath.Dir(file), os.ModePerm)
-		if err != nil {
-			panic(fmt.Sprintf("error creating log file path %s: %s", file, err))
-		}
-		f, err = os.Create(file)
-		if err != nil {
-			panic(fmt.Sprintf("error creating log file %s: %s", file, err))
-		}
-	} else {
-		var err error
-		f, err = os.OpenFile(file, os.O_APPEND|os.O_WRONLY, 0644)
-		if err != nil {
-			return
-		}
+		flag = os.O_APPEND | os.O_CREATE | os.O_WRONLY
+	}
+	var err error
+	f, err := os.OpenFile(file, flag, 0644)
+	if err != nil {
+		panic(fmt.Sprintf("error writing to log file %s: %s", file, err))
 	}
 
 	// close the log file after writing
@@ -116,7 +107,7 @@ func (lgr *Logger) writeToFile(l string, file string) {
 	}(f)
 
 	writer := bufio.NewWriter(f)
-	_, err := writer.WriteString(l)
+	_, err = writer.WriteString(l)
 	if err != nil {
 		panic(fmt.Sprintf("error writing to log file %s: %s", file, err))
 	}
