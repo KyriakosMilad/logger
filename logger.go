@@ -68,12 +68,14 @@ func (lgr *Logger) LogInnerWarning(s string, skip int) {
 
 func (lgr *Logger) Log(s string, level string, skip int) {
 	pc, filename, line, _ := runtime.Caller(skip + 1)
+	funcNameSplit := strings.Split(runtime.FuncForPC(pc).Name(), ".")
+	funcName := funcNameSplit[len(funcNameSplit)-2]
 	vars := map[string]string{
 		"now":        time.Now().UTC().Format(time.RFC3339),
 		"traceCode":  lgr.traceCode,
 		"counter":    fmt.Sprintf("%04d", lgr.counter),
 		"level":      level,
-		"funcName":   runtime.FuncForPC(pc).Name(),
+		"funcName":   funcName,
 		"fileName":   filename,
 		"lineNumber": fmt.Sprintf("%d", line),
 		"value":      s,
