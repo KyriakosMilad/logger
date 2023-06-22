@@ -87,6 +87,7 @@ func (lgr *Logger) Log(s string, level string, skip int) {
 	if lgr.outputLogFile != "" {
 		lgr.writeToFile(l, lgr.outputLogFile)
 	}
+	lgr.counter += 1
 }
 
 func (lgr *Logger) writeToFile(l string, file string) {
