@@ -75,7 +75,7 @@ func (lgr *Logger) Log(s string, level string, skip int) {
 		"level":      level,
 		"funcName":   runtime.FuncForPC(pc).Name(),
 		"fileName":   filename,
-		"lineNumber": string(rune(line)),
+		"lineNumber": fmt.Sprintf("%d", line),
 		"value":      s,
 	}
 	l := lgr.replaceVariables(lgr.format, vars) + "\n"
