@@ -25,6 +25,7 @@ type Logger struct {
 	traceCode               string
 	counter                 int
 	format                  string
+	traceCodeLength         uint8
 }
 
 func New(consolePrint bool, outputLogsDir string, createLogFileIfNotExist bool, traceCode string, format string) *Logger {
@@ -167,4 +168,16 @@ func AutoGenerateTraceCode(prefix string, length uint8) string {
 		return prefix + "." + string(code)
 	}
 	return string(code)
+}
+
+func (lgr *Logger) Done(newTraceCode string) {
+	lgr.traceCode = newTraceCode
+	lgr.ResetCounter()
+	l := "=======================================================" + "\n"
+	if lgr.consolePrint {
+		log.Print(l)
+	}
+	if lgr.outputLogFile != "" {
+		lgr.writeToFile(l, lgr.outputLogFile)
+	}
 }
